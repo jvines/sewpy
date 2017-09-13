@@ -60,43 +60,50 @@ class SEW():
     """
 
     def __init__(self, workdir=None, sexpath="sex", params=None, config=None, configfilepath=None, nice=None, loglevel=None):
-        """
-        All arguments have default values and are optional.
+        """All arguments have default values and are optional.
 
-        :param workdir: where I'll write my files. Specify this (e.g., "test") if you care about the
-                output files.
-                If None, I create a unique temporary directory myself, usually in /tmp.
+        :param workdir: where I'll write my files. Specify this (e.g., "test")
+                        if you care about the output files.
+                        If None, I create a unique temporary directory myself,
+                        usually in /tmp.
 
-        :param sexpath: path to the sextractor executable (e.g., "sex" or "sextractor", if in your PATH)
-        :param params: the parameters you want SExtractor to measure (i.e., what you would write in the
-                "default.param" file)
+        :param sexpath: path to the sextractor executable (e.g., "sex" or
+                        "sextractor", if in your PATH)
+        :param params: the parameters you want SExtractor to measure
+                       (i.e., what you would write in the "default.param" file)
         :type params: list of strings
-        :param config: config settings that will supersede the default config (e.g., what you would
-                change in the "default.sex" file)
+        :param config: config settings that will supersede the default config
+                       (e.g., what you would change in the "default.sex" file)
         :type config: dict
-        :param configfilepath: specify this if you want me to use an existing SExtractor config file as
-                "default" (instead of the sextractor -d one)
-        :param nice: niceness with which I should run SExtractor. Use e.g. ``19`` for set lowest priority.
+        :param configfilepath: specify this if you want me to use an existing
+                               SExtractor config file as "default"
+                               (instead of the sextractor -d one)
+        :param nice: niceness with which I should run SExtractor.
+                     Use e.g. ``19`` for set lowest priority.
         :type nice: int
 
-        :param loglevel: verbosity, e.g. the python-level logging threshold for the sewpy module logger.
-                For example, set this to "WARNING" and sewpy will no longer log simple INFOs.
-                Choices are "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL".
-                To disable logging, set ``loglevel="CRITICAL"``
+        :param loglevel: verbosity, e.g. the python-level logging threshold
+                         for the sewpy module logger.
+                         For example, set this to "WARNING" and sewpy will no
+                         longer log simple INFOs.
+                         Choices are "DEBUG", "INFO", "WARNING", "ERROR",
+                         "CRITICAL".
+                         To disable logging, set ``loglevel="CRITICAL"``
         :type loglevel: string or int or logging.level...
 
 
-        To use an existing SExtractor param-, conv-, or nnw-file, simply specify these in the config
-        dict, using the appropriate SExtractor keys (PARAMETERS_NAME, FILTER_NAME, ...)
+        To use an existing SExtractor param-, conv-, or nnw-file,
+        simply specify these in the config dict, using the appropriate
+        SExtractor keys (PARAMETERS_NAME, FILTER_NAME, ...)
 
-        .. warning:: When using *vector*-type params resulting in multiple columns (such as "FLUX_RADIUS(3)"
-                in the example above), do not put these in the last position of the params list, otherwise astropy
-                fails reading the catalog! This is probably due to the fact that the SExtractor header doesn't give
-                a hint that multiple columns are expected when a vector-type param comes last. A workaround would be
+        .. warning:: When using *vector*-type params resulting in multiple
+                     columns (such as "FLUX_RADIUS(3)"
+                in the example above), do not put these in the last position of
+                the params list, otherwise astropy fails reading the catalog!
+                This is probably due to the fact that the SExtractor
+                header doesn't give a hint that multiple columns are expected
+                when a vector-type param comes last. A workaround would be
                 way too complicated.
-
-
-
         """
 
         # We start by setting the log "verbosity":
@@ -168,20 +175,18 @@ class SEW():
         return version
 
     def __str__(self):
-        """
-        A string summary representing the instance.
-        """
+        """A string summary representing the instance."""
         return "'SEW object with workdir %s'" % (self.workdir)
 
     def _check_params(self):
-        """
-        Compares the params to a list of known params, and spits out a useful
+        """Compares the params to a list of known params, and spits out a useful
         warning if something seems fishy.
         """
         strange_param_helper = False
         for param in self.params:
 
-            # It could be that the param encapsulates several values (e.g., "FLUX_RADIUS(10)")
+            # It could be that the param encapsulates several values
+            # (e.g., "FLUX_RADIUS(10)")
             # So we have to dissect this
             match = re.compile("(\w*)\(\d*\)").match(param)
             if match:
@@ -234,14 +239,11 @@ class SEW():
             self.config["PSF_NAME"] = self._get_psf_filepath()
 
     def _get_params_filepath(self):
-        """
-        Stays the same for a given instance.
-        """
+        """Stays the same for a given instance."""
         return os.path.join(self.workdir, "params.txt")
 
     def _get_config_filepath(self):
-        """
-        Idem, stays the same for a given instance.
+        """Idem, stays the same for a given instance.
         Might return the non-default configfilepath, if set.
         """
         if self.configfilepath is None:
@@ -250,38 +252,27 @@ class SEW():
             return self.configfilepath
 
     def _get_conv_filepath(self):
-        """
-        Stays the same for a given instance.
-        """
+        """Stays the same for a given instance."""
         return os.path.join(self.workdir, "conv.txt")
 
     def _get_psf_filepath(self):
-        """
-        Stays the same for a given instance.
-        """
+        """Stays the same for a given instance."""
         return os.path.join(self.workdir, "default.psf")
 
     def _get_cat_filepath(self, imgname):
-        """
-        This changes from image to image
-        """
+        """This changes from image to image."""
         return os.path.join(self.workdir, 'cat/' + imgname + ".cat")
 
     def _get_assoc_filepath(self, imgname):
-        """
-        Changes from image to image
-        """
+        """Changes from image to image."""
         return os.path.join(self.workdir, imgname + ".assoc.txt")
 
     def _get_log_filepath(self, imgname):
-        """
-        Changes from image to image
-        """
+        """Changes from image to image."""
         return os.path.join(self.workdir, 'log/' + imgname + ".LOG")
 
     def _write_params(self, force=False):
-        """
-        Writes the parameters to the file, if needed.
+        """Writes the parameters to the file, if needed.
 
         :param force: if True, I overwrite any existing file.
         """
@@ -296,8 +287,7 @@ class SEW():
                 "The params file already exists, I don't overwrite it.")
 
     def _write_default_config(self, force=False):
-        """
-        Writes the *default* config file, if needed.
+        """Writes the *default* config file, if needed.
         I don't write this file if a specific config file is set.
 
         :param force: if True, I overwrite any existing file.
@@ -306,7 +296,8 @@ class SEW():
         if self.configfilepath is not None:
             logger.debug(
                 "You use the existing config file %s, I don't have to write one." %
-                (self._get_config_filepath()))
+                (self._get_config_filepath())
+            )
             return
 
         if force or not os.path.exists(self._get_config_filepath()):
@@ -716,7 +707,8 @@ class SEW():
 
     def _clean_workdir(self):
         """
-        Removes the config/param files related to this instance, to allow for a fresh restart.
+        Removes the config/param files related to this instance, to allow for a
+        fresh restart.
         Files related to specific images are not removed.
         """
         toremove = [self._get_config_filepath(), self._get_params_filepath(
@@ -732,9 +724,6 @@ class SEW():
         ASSOC identification. An "index" for each source is generated, it gets
         used to identify galaxies.
         """
-
-        # if assoc_xname not in assoc_cat.colnames or assoc_yname not in assoc_cat.colnames:
-        #	raise RuntimeError("I don't have columns %s or %s" % (assoc_xname, assoc_yname))
 
         if os.path.exists(self._get_assoc_filepath(imgname)):
             logger.warning("ASSOC file already exists, I will overwrite it")
@@ -753,32 +742,37 @@ class SEW():
 
     def _add_prefix(self, table, prefix):
         """
-        Modifies the column names of a table by prepending the prefix *in place*.
+        Modifies the column names of a table by prepending the prefix
+        *in place*.
         Skips the VECTOR_ASSOC stuff !
         """
+        vector_names = ["VECTOR_ASSOC", "VECTOR_ASSOC_1", "VECTOR_ASSOC_2"]
         if prefix == "":
             return
         for colname in table.colnames:
-            if colname not in ["VECTOR_ASSOC", "VECTOR_ASSOC_1", "VECTOR_ASSOC_2"]:
+            if colname not in vector_names:
                 table.rename_column(colname, prefix + colname)
 
-    def __call__(self, imgfilepath, imgname=None, assoc_cat=None, assoc_xname="x", assoc_yname="y",
-                 returncat=True, prefix="", writelog=True):
+    def __call__(self, imgfilepath, imgname=None, assoc_cat=None,
+                 assoc_xname="x", assoc_yname="y", returncat=True, prefix="",
+                 writelog=True):
         """
         Runs SExtractor on a given image.
 
         :param imgfilepath: Path to the input FITS image I should run on
-        :param assoc_cat:  optional input catalog (astropy table), if you want to use the ASSOC helper
+        :param assoc_cat:  optional input catalog (astropy table),
+                            if you want to use the ASSOC helper
         :param assoc_xname: x coordinate name I should use in the ASSOC helper
         :param assoc_yname: idem
 
-        :param returncat: by default I read the SExtractor output catalog and return it as an astropy
-                table.
+        :param returncat: by default I read the SExtractor output catalog and
+                          return it as an astropy table.
                 If set to False, I do not attempt to read it.
-        :param prefix: will be prepended to the column names of the astropy table that I return
+        :param prefix: will be prepended to the column names of the astropy
+                       table that I return
         :type prefix: string
-        :param writelog: if True I save the sextractor command line input and output into a dedicated
-                log file in the workdir.
+        :param writelog: if True I save the sextractor command line input and
+                         output into a dedicated log file in the workdir.
 
         :returns: a dict containing the keys:
 
@@ -787,8 +781,8 @@ class SEW():
                 * **workdir**: the path to the workdir (all my internal files are there)
                 * **logfilepath**: the path to the SExtractor log file (in the workdir)
 
-        Everything related to this particular image stays within this method, the SExtractor instance
-        (in particular config) is not modified !
+        Everything related to this particular image stays within this method,
+        the SExtractor instance (in particular config) is not modified !
         """
 
         starttime = datetime.now()
@@ -817,11 +811,13 @@ class SEW():
         if assoc_cat is not None:
 
             logger.info(
-                "I will run in ASSOC mode, trying to find %i sources..." % (len(assoc_cat)))
+                "I will run in ASSOC mode, trying to find %i sources..."
+                % (len(assoc_cat)))
             if "VECTOR_ASSOC(3)" not in self.params:
                 raise RuntimeError(
                     "To use the ASSOC helper, you have to add 'VECTOR_ASSOC(3)' to the params")
-            if assoc_xname not in assoc_cat.colnames or assoc_yname not in assoc_cat.colnames:
+            if (assoc_xname not in assoc_cat.colnames or
+                    assoc_yname not in assoc_cat.colnames):
                 raise RuntimeError("I don't have columns %s or %s" %
                                    (assoc_xname, assoc_yname))
             if "VECTOR_ASSOC_2" in assoc_cat.colnames:
@@ -831,7 +827,8 @@ class SEW():
                 # This is not 100% correct, as some params might be vectors.
                 if prefix + param in assoc_cat.colnames:
                     raise RuntimeError(
-                        "Your assoc_cat already has a column named %s, fix this" % (prefix + param))
+                        "Your assoc_cat already has a column named %s, fix this"
+                        % (prefix + param))
 
             self._write_assoc(cat=assoc_cat, xname=assoc_xname,
                               yname=assoc_yname, imgname=imgname)
@@ -894,9 +891,10 @@ class SEW():
         logger.info("SExtractor stderr:")
         logger.info(err)
 
-        if not "All done" in err.decode(encoding='UTF-8'):
-            logger.warning("Ouch, something seems wrong, check SExtractor log: %s" %
-                           self._get_log_filepath(imgname))
+        if "All done" not in err.decode(encoding='UTF-8'):
+            logger.warning(
+                "Ouch, something seems wrong, check SExtractor log: %s"
+                % self._get_log_filepath(imgname))
 
         endtime = datetime.now()
         logger.info("Running SExtractor done, it took %.2f seconds." %
@@ -904,10 +902,15 @@ class SEW():
 
         # Let's check if this worked.
         if not os.path.isfile(self._get_cat_filepath(imgname)):
-            raise RuntimeError("It seems that SExtractor did not write the file '%s'. Check SExtractor log: %s" % (
-                self._get_cat_filepath(imgname), self._get_log_filepath(imgname)))
+            raise RuntimeError(
+                "It seems that SExtractor did not write the file '%s'. Check SExtractor log: %s"
+                % (
+                    self._get_cat_filepath(imgname),
+                    self._get_log_filepath(imgname))
+            )
 
-        # We return a dict. It always contains at least the path to the sextractor catalog:
+        # We return a dict. It always contains at least the path to
+        # the sextractor catalog:
         output = {"catfilepath": self._get_cat_filepath(
             imgname), "workdir": self.workdir}
         if writelog:
@@ -916,34 +919,42 @@ class SEW():
         # And we read the output, if asked for:
         if returncat:
             if assoc_cat is None:
-                sextable = astropy.table.Table.read(self._get_cat_filepath(imgname),
-                                                    format="ascii.sextractor")
+                sextable = astropy.table.Table.read(
+                    self._get_cat_filepath(imgname), format="ascii.sextractor")
                 logger.info(
-                    "Read %i objects from the SExtractor output catalog" % (len(sextable)))
+                    "Read %i objects from the SExtractor output catalog" %
+                    (len(sextable)))
                 self._add_prefix(sextable, prefix)
                 output["table"] = sextable
 
             else:  # We have to process the output catalog, merging it.
 
-                # We add the "number" column to the assoc_cat, calling it VECTOR_ASSOC_2:
+                # We add the "number" column to the assoc_cat,
+                # calling it VECTOR_ASSOC_2:
                 intable = copy.deepcopy(assoc_cat)
                 intable["VECTOR_ASSOC_2"] = range(len(assoc_cat))
 
                 # We read in the SExtractor output:
-                sextable = astropy.table.Table.read(self._get_cat_filepath(imgname),
-                                                    format="ascii.sextractor")
+                sextable = astropy.table.Table.read(
+                    self._get_cat_filepath(imgname), format="ascii.sextractor"
+                )
                 logger.info(
-                    "Read %i objects from the SExtractor output catalog" % (len(sextable)))
+                    "Read %i objects from the SExtractor output catalog" %
+                    (len(sextable)))
                 self._add_prefix(sextable, prefix)
                 sextable.remove_columns(["VECTOR_ASSOC", "VECTOR_ASSOC_1"])
 
-                # Due to what seems to be a bug in SExtractor (version 2.19.5 and earlier),
+                # Due to what seems to be a bug in SExtractor
+                # (version 2.19.5 and earlier),
                 # we need to kick out "duplicated" (same VECTOR_ASSOC_2) rows.
                 # That's weird, as in principle we asked to keep the NEAREST !
                 sortedassoc = np.sort(sextable["VECTOR_ASSOC_2"].data)
                 duplassoc = list(
-                    np.unique(sortedassoc[sortedassoc[1:] == sortedassoc[:-1]]))
-                # The unique is here as there might be more than 2 identical numbers...
+                    np.unique(
+                        sortedassoc[sortedassoc[1:] == sortedassoc[:-1]])
+                )
+                # The unique is here as there might be more than 2
+                # identical numbers...
                 if len(duplassoc) > 0:
                     logger.warning(
                         "%i sources from the SExtractor catalog are strange duplicates (bug ?), I discard them." % (len(duplassoc)))
@@ -958,14 +969,14 @@ class SEW():
                         "SExtractor has returned no ASSOC match")
 
                 # We merge the tables, keeping all entries of the "intable"
-                joined = astropy.table.join(intable, sextable,
-                                            join_type='left', keys='VECTOR_ASSOC_2',
-                                            # raises an error in case of metadata conflict.
-                                            metadata_conflicts="error",
-                                            # Will only be used in case of column name conflicts.
-                                            table_names=['ASSOC', 'SEx'],
-                                            uniq_col_name="{table_name}_{col_name}"
-                                            )
+                joined = astropy.table.join(
+                    intable, sextable, join_type='left', keys='VECTOR_ASSOC_2',
+                    # raises an error in case of metadata conflict.
+                    metadata_conflicts="error",
+                    # Will only be used in case of column name conflicts.
+                    table_names=['ASSOC', 'SEx'],
+                    uniq_col_name="{table_name}_{col_name}"
+                )
 
                 # This join does not mix the order, as the output is sorted according to our own
                 # VECTOR_ASSOC_2
@@ -981,8 +992,8 @@ class SEW():
                             intable.colnames, joined.colnames))
 
                 # The join might return a **masked** table.
-                # In any case, we add one simply-named column with a flag telling if the
-                # identification has worked.
+                # In any case, we add one simply-named column with a flag
+                # telling if the identification has worked.
 
                 if joined.masked:
                     logger.info(
@@ -1002,17 +1013,9 @@ class SEW():
 
         return output
 
-
-#	def destroy(self):
-#		"""
-#		Removes the complete working dir, careful with this.
-#		"""
-#		# No, this is way to dangerous, workdir could be "."
-#		#shutil.rmtree(self.workdir)
-
-    # Some class attributes:
-    # We give this fullparamtxt here as some earlier versions of sextractor are not able to spit it out.
-    # It's only used to check your params for typos, anyway.
+# Some class attributes:
+# We give this fullparamtxt here as some earlier versions of sextractor are not
+# able to spit it out. It's only used to check your params for typos, anyway.
 
     fullparamtxt = """
 #NUMBER                 Running object number
